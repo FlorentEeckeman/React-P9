@@ -19,7 +19,8 @@ import Bills, { handleClickIconEye } from "../containers/Bills.js";
 import router from "../app/Router.js";
 import mockStore from "../__mocks__/store";
 import mockStoreCorrupt from "../__mocks__/storeError.js";
-jest.mock("jquery", () => {
+const $ = require("jquery");
+/*jest.mock("jquery", () => {
   const modal = jest.fn((options) => {
     return {
       modal: jest.fn(),
@@ -30,7 +31,8 @@ jest.mock("jquery", () => {
     modal,
   };
 });
-
+*/
+$.fn.modal = jest.fn();
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
     test("Then bill icon in vertical layout should be highlighted", async () => {
@@ -91,6 +93,7 @@ describe("when i am on bills page", () => {
     const onNavigate = (pathname) => {
       document.body.innerHTML = ROUTES({ pathname });
     };
+
     Object.defineProperty(window, "localStorage", {
       value: localStorageMock,
     });
@@ -111,12 +114,22 @@ describe("when i am on bills page", () => {
       localStorage: window.localStorage,
     });
     document.body.innerHTML = BillsUI({ data: bills });
+    /* window.$ = jest.fn().mockImplementation(() => {
+      return {
+        modal: jest.fn(),
+        width: jest.fn(),
+        find: jest.fn(),
+
+        click: jest.fn(),
+      };
+    });*/
 
     await waitFor(() => screen.getAllByTestId("icon-window"));
-    const eye = screen.getAllByTestId("icon-eye")[0];
+    const eye = screen.getAllByTestId("icon-eye")[1];
     const jestIconEyes = jest.fn((eye) => bill.handleClickIconEye(eye));
+
     eye.addEventListener("click", jestIconEyes(eye));
-    console.log(eye);
+    console.log(jestIconEyes(eye));
 
     userEvent.click(eye);
 
