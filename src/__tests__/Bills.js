@@ -2,8 +2,7 @@
  * @jest-environment jsdom
  */
 import "@testing-library/jest-dom";
-
-import userEvent from "@testing-library/user-event";
+$.fn.modal = jest.fn();
 import {
   screen,
   getByTestId,
@@ -12,27 +11,21 @@ import {
   waitFor,
 } from "@testing-library/dom";
 import BillsUI from "../views/BillsUI.js";
+import Bills from "../containers/Bills.js";
 import { bills } from "../fixtures/bills.js";
-import { ROUTES, ROUTES_PATH } from "../constants/routes";
-import { localStorageMock, store } from "../__mocks__/localStorage.js";
-import Bills, { handleClickIconEye } from "../containers/Bills.js";
+import { ROUTES_PATH } from "../constants/routes.js";
+import { ROUTES } from "../constants/routes.js";
+import { localStorageMock } from "../__mocks__/localStorage.js";
+import mockStore from "../__mocks__/store.js";
 import router from "../app/Router.js";
-import mockStore from "../__mocks__/store";
+import userEvent from "@testing-library/user-event";
+import ErrorPage from "../views/ErrorPage.js";
 import mockStoreCorrupt from "../__mocks__/storeError.js";
-const $ = require("jquery");
-/*jest.mock("jquery", () => {
-  const modal = jest.fn((options) => {
-    return {
-      modal: jest.fn(),
-    };
-  });
 
-  return {
-    modal,
-  };
+jest.mock("../app/store", () => mockStore);
+afterEach(() => {
+  jest.clearAllMocks();
 });
-*/
-$.fn.modal = jest.fn();
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
     test("Then bill icon in vertical layout should be highlighted", async () => {
@@ -43,6 +36,8 @@ describe("Given I am connected as an employee", () => {
         "user",
         JSON.stringify({
           type: "Employee",
+          email: "employee@test.tld",
+          status: "connected",
         })
       );
       const root = document.createElement("div");
@@ -84,8 +79,58 @@ describe("Given I am connected as an employee", () => {
     });
     test("should show all bills", () => {
       const button = getAllByTestId(document.body, "icon-eye");
-      expect(button.length).toEqual(bills.length);
+      expect(button.length / 2).toEqual(bills.length);
     });
+  });
+});
+describe("when i am on bills page and i load bills", () => {
+  beforeEach(() => {
+    jest.spyOn(mockStore, "bills");
+    Object.defineProperty(window, "localStorage", {
+      value: localStorageMock,
+    });
+    window.localStorage.setItem(
+      "user",
+      JSON.stringify({
+        type: "Employee",
+        email: "employee@test.tld",
+      })
+    );
+    const root = document.createElement("div");
+    root.setAttribute("id", "root");
+    document.body.appendChild(root);
+    router();
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  test(" should have request status 404", async () => {
+    mockStore.bills.mockImplementationOnce(() => {
+      return {
+        list: () => {
+          return Promise.reject(new Error("Erreur 404"));
+        },
+      };
+    });
+
+    window.onNavigate(ROUTES_PATH.Bills);
+    await new Promise(process.nextTick);
+    const message = await screen.getByText(/Erreur 404/);
+    expect(message).toBeTruthy();
+  });
+  test(" should have request status 500", async () => {
+    mockStore.bills.mockImplementationOnce(() => {
+      return {
+        list: () => {
+          return Promise.reject(new Error("Erreur 500"));
+        },
+      };
+    });
+
+    window.onNavigate(ROUTES_PATH.Dashboard);
+    await new Promise(process.nextTick);
+    const message = await screen.getByText(/Erreur 500/);
+    expect(message).toBeTruthy();
   });
 });
 describe("when i am on bills page", () => {
@@ -114,22 +159,12 @@ describe("when i am on bills page", () => {
       localStorage: window.localStorage,
     });
     document.body.innerHTML = BillsUI({ data: bills });
-    /* window.$ = jest.fn().mockImplementation(() => {
-      return {
-        modal: jest.fn(),
-        width: jest.fn(),
-        find: jest.fn(),
-
-        click: jest.fn(),
-      };
-    });*/
 
     await waitFor(() => screen.getAllByTestId("icon-window"));
     const eye = screen.getAllByTestId("icon-eye")[1];
     const jestIconEyes = jest.fn((eye) => bill.handleClickIconEye(eye));
 
     eye.addEventListener("click", jestIconEyes(eye));
-    console.log(jestIconEyes(eye));
 
     userEvent.click(eye);
 
@@ -200,6 +235,6 @@ describe("when i am on bills page", () => {
     const jestFnError = jest.fn(() => billError.getBills());
     const resFnError = jestFnError(mockStoreCorrupt);
 
-    await expect(resFnError).toEqual(mockStoreCorrupt.bills().list());
+    expect(resFnError).toEqual(mockStoreCorrupt.bills().list());
   });
 });

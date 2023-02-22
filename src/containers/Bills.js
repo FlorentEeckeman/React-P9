@@ -42,24 +42,26 @@ export default class {
         .bills()
         .list()
         .then((snapshot) => {
-          const bills = snapshot.map((doc) => {
-            try {
-              return {
-                ...doc,
-                date: formatDate(doc.date),
-                status: formatStatus(doc.status),
-              };
-            } catch (e) {
-              // if for some reason, corrupted data was introduced, we manage here failing formatDate function
-              // log the error and return unformatted date in that case
-              //console.log(e, "for", doc);
-              return {
-                ...doc,
-                date: doc.date,
-                status: formatStatus(doc.status),
-              };
-            }
-          });
+          const bills = snapshot
+            .sort((a, b) => (a.date < b.date ? 1 : -1))
+            .map((doc) => {
+              try {
+                return {
+                  ...doc,
+                  date: formatDate(doc.date),
+                  status: formatStatus(doc.status),
+                };
+              } catch (e) {
+                // if for some reason, corrupted data was introduced, we manage here failing formatDate function
+                // log the error and return unformatted date in that case
+                console.log(e, "for", doc);
+                return {
+                  ...doc,
+                  date: doc.date,
+                  status: formatStatus(doc.status),
+                };
+              }
+            });
 
           return bills;
         });
