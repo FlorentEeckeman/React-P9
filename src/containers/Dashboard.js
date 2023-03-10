@@ -141,7 +141,7 @@ export default class {
 
   handleShowTickets(e, bills, index) {
     if (this.counter === undefined || this.index !== index) this.counter = 0;
-    //console.log(this.counter);
+    console.log(this.counter);
     if (this.index === undefined || this.index !== index) this.index = index;
     if (this.counter % 2 === 0) {
       $(`#arrow-icon${this.index}`).css({ transform: "rotate(0deg)" });
@@ -156,9 +156,9 @@ export default class {
     }
 
     bills.forEach((bill) => {
-      $(`#open-bill${bill.id}`).on("click", (e) =>
-        this.handleEditTicket(e, bill, bills)
-      );
+      $(`#open-bill${bill.id}`)
+        .off("click")
+        .on("click", (e) => this.handleEditTicket(e, bill, bills));
     });
 
     return bills;
