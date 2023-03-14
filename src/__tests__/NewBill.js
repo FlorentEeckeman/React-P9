@@ -130,6 +130,38 @@ describe("Given I am connected as an employee", () => {
       userEvent.click(fileChange);
       expect(jestChangeFile).toHaveBeenCalled();
     });
+    test("Then I can change file with bad extension", async () => {
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
+
+      const html = NewBillUI();
+      document.body.innerHTML = html;
+      const newBill = new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      });
+
+      const dataTest = {
+        preventDefault: () => {},
+        target: {
+          value: "https://risibank.fr/cache/medias/0/21/2188/218864/full.zng",
+        },
+      };
+
+      const jestChangeFile = jest.fn((e) => newBill.handleChangeFile(e));
+      jest.spyOn(window, "alert").mockImplementation(() => {});
+      await waitFor(() => screen.getByTestId("form-new-bill"));
+      const fileChange = screen.getByTestId("file");
+
+      fileChange.addEventListener("click", jestChangeFile(dataTest));
+      userEvent.click(fileChange);
+      expect(window.alert).toBeCalledWith(
+        "Veuillez ajouter un fichier au format .jpeg/.jpg/.png seulement."
+      );
+    });
     test("Then I should submit form", async () => {
       const jestSubmit = jest.spyOn(mockStore.bills(), "update");
       const commentary = screen.getByText("Envoyer");
