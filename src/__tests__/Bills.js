@@ -26,6 +26,7 @@ jest.mock("../app/store", () => mockStore);
 afterEach(() => {
   jest.clearAllMocks();
 });
+// Test Bills UI
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
     test("Then bill icon in vertical layout should be highlighted", async () => {
@@ -83,6 +84,7 @@ describe("Given I am connected as an employee", () => {
     });
   });
 });
+// Test bad Request
 describe("when i am on bills page and i load bills", () => {
   beforeEach(() => {
     jest.spyOn(mockStore, "bills");
@@ -133,6 +135,7 @@ describe("when i am on bills page and i load bills", () => {
     expect(message).toBeTruthy();
   });
 });
+// Test Bills function
 describe("when i am on bills page", () => {
   test(" eyes icons should be clickable", async () => {
     const onNavigate = (pathname) => {

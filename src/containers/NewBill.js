@@ -30,26 +30,26 @@ export default class NewBill {
       alert("Veuillez ajouter un fichier au format .jpeg/.jpg/.png seulement.");
     } else {
       formData.append("file", file);
+
+      const email = JSON.parse(localStorage.getItem("user")).email;
+
+      formData.append("email", email);
+
+      this.store
+        .bills()
+        .create({
+          data: formData,
+          headers: {
+            noContentType: true,
+          },
+        })
+        .then(({ fileUrl, key }) => {
+          this.billId = key;
+          this.fileUrl = fileUrl;
+          this.fileName = fileName;
+        })
+        .catch((error) => console.error(error));
     }
-    const email = JSON.parse(localStorage.getItem("user")).email;
-
-    formData.append("email", email);
-
-    this.store
-      .bills()
-      .create({
-        data: formData,
-        headers: {
-          noContentType: true,
-        },
-      })
-      .then(({ fileUrl, key }) => {
-        console.log("done");
-        this.billId = key;
-        this.fileUrl = fileUrl;
-        this.fileName = fileName;
-      })
-      .catch((error) => console.error(error));
   };
   handleSubmit = (e) => {
     e.preventDefault();

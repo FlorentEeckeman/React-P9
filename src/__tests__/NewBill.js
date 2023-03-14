@@ -20,11 +20,6 @@ import mockStore from "../__mocks__/store.js";
 import { async } from "regenerator-runtime";
 
 describe("Given I am connected as an employee", () => {
-  beforeAll(() => {
-    // JSDom does not implement this and an error was being
-    // thrown from jest-axe because of it.
-    //  window.getComputedStyle = () => {};
-  });
   beforeEach(() => {
     window.getComputedStyle = () => {};
     Object.defineProperty(window, "localStorage", {
@@ -35,13 +30,13 @@ describe("Given I am connected as an employee", () => {
       JSON.stringify({
         type: "Employee",
         email: "employee@test.tld",
-        status: "connected",
       })
     );
   });
   afterEach(() => {
     jest.clearAllMocks();
   });
+  // Test NewBill UI & Form
   describe("When I am on NewBill Page", () => {
     test("Then newBill icon in vertical layout should be highlighted", async () => {
       const root = document.createElement("div");
@@ -136,24 +131,7 @@ describe("Given I am connected as an employee", () => {
       expect(jestChangeFile).toHaveBeenCalled();
     });
     test("Then I should submit form", async () => {
-      const onNavigate = (pathname) => {
-        document.body.innerHTML = ROUTES({ pathname });
-      };
-
-      const newBill = new NewBill({
-        document,
-        onNavigate,
-        store: mockStore,
-        localStorage: window.localStorage,
-      });
-      const dataTest = {
-        preventDefault: () => {},
-        target: {
-          value: "https://risibank.fr/cache/medias/0/21/2188/218864/full.png",
-        },
-      };
       const jestSubmit = jest.spyOn(mockStore.bills(), "update");
-      const jestHandleSubmit = jest.fn((e) => newBill.handleSubmit(e));
       const commentary = screen.getByText("Envoyer");
       userEvent.click(commentary);
       expect(jestSubmit).toHaveBeenCalled();
@@ -201,11 +179,7 @@ describe("when i am on bills page and i load bills", () => {
         email: "employee@test.tld",
       })
     );
-    /*const root = document.createElement("div");
-    root.setAttribute("id", "root");
-    document.body.append(root);
-    router();
-    window.onNavigate(ROUTES_PATH.NewBill);*/
+
     const html = NewBillUI();
     document.body.innerHTML = html;
     await waitFor(() => screen.getByTestId("form-new-bill"));
@@ -225,11 +199,6 @@ describe("when i am on bills page and i load bills", () => {
     });
     const fileChange = screen.getByTestId("file");
     userEvent.upload(fileChange, testImageFile);
-    /*fireEvent.change(fileChange, {
-      target: {
-        value: `D:\Images\JVC\stickers\risitasaah.png`,
-      },
-    });*/
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -260,6 +229,8 @@ describe("when i am on bills page and i load bills", () => {
     userEvent.click(commentary);
     expect(jestHandleSubmit).toHaveBeenCalled();
   });
+
+  // Test Bad Request
   test(" should have request status 404", async () => {
     const onNavigate = (pathname) => {
       document.body.innerHTML = ROUTES({ pathname });
